@@ -1,23 +1,21 @@
-from yylparser import *
+from YyLexReader import *
 
 def main():
-    yyl = YylParser("./lex/c99.l")
+    yyl = YyLexReader("./lex/c99.l")
+    print(yyl.userProgramHeaders)
+    print("-----------------")
 
-    print("Define Rules:")
-    for key, value in yyl.define_rules.items():
-        print(f"{key}: {value}")
+    print(yyl.userProgram)
+    print("-----------------")
 
-    print("\nRegex Rules:")
-    for pattern, action in yyl.regex_rules:
-        print(f"{pattern} -> {action}")
+    for key,val in yyl.supportDefinitions.items():
+        print(key,' ',val)
+    print("-----------------")
 
-    print("\nProgram1:")
-    print(yyl.program1)
-
-    print("\nProgram2:")
-    for line in yyl.program2.split('\n'):
-        # 输出每行程序2的内容，并保持原始缩进
-        print(line)
+    for element in yyl.rules:
+        print(element)
+    print("-----------------")
 
 
-main()
+if __name__=="__main__":
+    main()
