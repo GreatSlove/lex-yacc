@@ -53,29 +53,34 @@ def init_all(filename):
         lines=ifile.readlines()
         i=0
         while i<len(lines):
-            if lines[i].strip()=="\n":
+            j=1
+            if lines[i]=="\n":
                 print('blank line')
                 i+=1
                 continue
-            if lines[i].strip()=="":
+            elif lines[i].strip()==";":
+                print('遇到;')
+                i+=1
+                continue
+            elif lines[i].strip()=="":
                 print('blank line')
                 i+=1
                 continue
-            if lines[i].startswith("%"):
+            elif lines[i].startswith("%"):
                 print('阶段1')
                 define_rules(lines[i])
                 i+=1
                 continue
-            if ' ' not in lines[i]:
+            elif len(lines[i].split())==1:
                 print('阶段2')
                 current_production=lines[i].strip()
-                j=i+1
-                while lines[j].strip()!=';':
+                while lines[j+i].strip()!=';':
+                    print('j='+str(j))
                     print(current_production)
 
-                    parse_production(lines[j],current_production)
+                    parse_production(lines[j+i],current_production)
                     j+=1
-            i=j+i-1
+            i=i+j
          
 
                 
