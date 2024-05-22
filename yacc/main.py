@@ -1,10 +1,13 @@
+from typing import List, Tuple
+
 terminal = []
 start = ""
-Producer = tuple[str, list[str]]
-producer_list: list[Producer] = []
+Producer = Tuple[str, List[str]]
+producer_list: List[Producer] = []
 program2 = ""
 
 def define_rules(ln):
+    global start,terminal
     len_ln = len(ln)
     i = 0
     left = ""
@@ -38,14 +41,11 @@ def define_rules(ln):
 
 def parse_production(ln, current_production):
     ln = ln.strip()
-    ln_=ln[1:]
-    ln_=ln_strip()
-
-    rights = ln_
+    rights =ln[1:]
     rights = rights.strip()
     for right in rights.split(' '):
         right = right.strip()
-        Producer.append((current_production, right.split()))
+        producer_list.append((current_production,right))
 
 def init_all(filename):
     current_production = None
@@ -53,22 +53,36 @@ def init_all(filename):
         lines=ifile.readlines()
         i=0
         while i<len(lines):
-            j=0
-            if lines[i].startswith("%"):
-                define_rules(lines[i])
-                i+=1
-            elif '%%' in lines[i]:
+            if lines[i].strip()=="\n":
+                print('blank line')
                 i+=1
                 continue
-            # else:
-            #     if ' ' not in lines[i]:
-            #         current_production=lines[i]
-            #         j+=1
-            #     parse_production(lines[j+i],current_production)
-            #     i=i+j+1
+            if lines[i].strip()=="":
+                print('blank line')
+                i+=1
+                continue
+            if lines[i].startswith("%"):
+                print('阶段1')
+                define_rules(lines[i])
+                i+=1
+                continue
+            if ' ' not in lines[i]:
+                print('阶段2')
+                current_production=lines[i].strip()
+                j=i+1
+                while lines[j].strip()!=';':
+                    print(current_production)
+
+                    parse_production(lines[j],current_production)
+                    j+=1
+            i=j+i-1
+         
+
+                
+                
 
 def main():
-    filename = "./yacc/test.txt"
+    filename = "./yacc/c99.y"
     init_all(filename)
     print("Terminals:", terminal)
     print("Start Symbol:", start)
