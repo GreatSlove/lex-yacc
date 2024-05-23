@@ -42,7 +42,7 @@ for iteration in range(128):
         else:  # 非可打印字符，使用十六进制表示
             ascii_dict['\\x' + format(iteration, '02x')] = char
 EPSILON = chr(128) # 用一个非法ascii字符表示空串
-
+DOT = chr(129) # 表示连缀关系的·号
 
 class RegexNormalizer:
     @staticmethod
@@ -427,106 +427,31 @@ class RegexNormalizer:
         return eli_quotation
 
     @staticmethod
-    def add_dots(regex: str)-> []:
+    def add_dots(regex: str)-> str:
         """
         为正则表达式加“点”，划分连缀关系
         :param regex:
         :return:
         """
-        i=0
-        cur_item = ""
-        last_left_parenthesis=-1
-        result=[]
-        parenthesis_stack = [] # 用一个栈存放左括号的下标，仅当栈空时才表示构成完整的一项
+        i = 0
         while i<len(regex):
-            #print('current regex[i]=',regex[i])
-            if regex[i] == '\\': # 读到转义字符，跳过下面的判断
-                pass
-            elif regex[i] == '(': # 非转义(
-                parenthesis_stack.append(i)
-
-                #print('parenthesis_stack pushed at i=',i,', regex[i]=',regex[i])
-
-                cur_item += regex[i]
+            is_char = False
+            if regex[i]=='\\': # 转义字符
+                is_char = True
+                if regex[i + 1] != 'x':  # 长度为2
+                    i += 1
+                else:  # 长度为4
+                    i += 3
+            if (
+                (is_char or regex[i] not in ['(','|']) # 常规字符
+                and i<len(regex)-1 # 不是最后一个字符
+                and regex[i+1] not in ['|',')','*'] # 后一个不是这些，|是运算符不用加点，)和*表示后面的仍然属于“当前字符”
+            ): # 加点
+                regex = regex[:i+1] + DOT + regex[i+1:]
+                i+=2
+            else:
                 i+=1
-                continue
-            elif regex[i] == '|': # 非转义|
-                cur_item += regex[i]
-                i+=1
-                continue
-            elif regex[i] == '*': # 非转义*
-                cur_item += regex[i]
-                i += 1
-            elif regex[i] == ')': # 非转义)
-                if len(parenthesis_stack)==0:
-                    print('At regex: ',regex)
-                    print('i=',i)
-                    print('cur_item = ',cur_item)
-                    print('parenthesis_stack: ', parenthesis_stack)
-                    print('current result: ',result)
-                    raise Exception("Unclosed ')'.")
-
-                last_left_parenthesis = parenthesis_stack.pop()
-
-                #print('parenthesis_stack popped at i=', i, ', regex[i]=', regex[i])
-
-                cur_item += regex[i]
-                i+=1
-                # 将后续的所有*读入
-                while i<len(regex) and regex[i]=='*':
-                    cur_item += regex[i]
-                    i+=1
-
-            if i>=len(regex):
-                break
-
-            # 栈空，有两种可能：刚读完)或*，或者本来就没有括号
-            if len(parenthesis_stack)==0:
-                if last_left_parenthesis!=-1: # 读进了一个完整的括号，将它提出
-                    result.append(cur_item)
-                    cur_item=""
-                    last_left_parenthesis=-1
-                if regex[i] == '(':  # 如果在这里读到括号，说明刚读完)或者*，后面又是新的括号
-                    continue
-                # 当前常规字符后面是什么？
-                cur_item += regex[i]
-                if i==len(regex)-1: # 最后一个字符，加入数组后直接结束
-                    result.append(cur_item)
-                    cur_item=""
-                    i+=1
-                    continue
-                elif regex[i]=='\\': # 转义字符
-                    if regex[i+1]!='x': # 长度为2
-                        cur_item += regex[i+1]
-                        i += 1
-                    else: # 长度为4
-                        cur_item += regex[i + 1] + regex[i + 2] + regex[i + 3]
-                        i += 3
-                    if i==len(regex)-1: # 当前转义字符是最后一个字符
-                        result.append(cur_item)
-                        cur_item=""
-                        i+=1
-                        continue
-
-                if regex[i+1] not in [')','|','*']: # 下一位也是字符或者是新的括号，说明当前位需要被分割
-                    result.append(cur_item)
-                    cur_item=""
-                    i+=1
-                    continue
-                i+=1
-            else: # 栈非空，读到的是某个括号里的东西
-                if regex[i] in ['(',')','|','*']: # 如果读到了保留字，需要重新判断处理
-                    continue
-                else: # 普通字符，直接写入
-                    cur_item += regex[i]
-                    i+=1
-
-
-        if len(cur_item)!=0:
-            result.append(cur_item)
-        return result
-
-
+        return regex
 
     @staticmethod
     def infix_to_postfix(regex: str)->str:
@@ -535,8 +460,7 @@ class RegexNormalizer:
         :param regex: 中缀正则表达式
         :return: 对应的后缀正则表达式
         """
-        # 将每个连缀区域进行后缀表达即可，整个正则表达式的后缀形式就是这些连缀区域直接相连
-        end_mark = chr(129) # 用一个非法字符作为结束符
+        end_mark = chr(1013) # 用一个非法字符作为结束符
         regex = regex + end_mark
         stack = [end_mark]
         result = ""
@@ -544,17 +468,19 @@ class RegexNormalizer:
             end_mark: 0,
             "(": 1,
             "|": 3,
-            "*": 5,
-            ")": 6,
+            DOT: 5,
+            "*": 7,
+            ")": 8,
         }
         in_coming_pri = { # 栈外优先级
             end_mark: 0,
-            "(": 6,
+            "(": 8,
             "|": 2,
-            "*": 4,
+            DOT: 4,
+            "*": 6,
             ")": 1,
         }
-        operators = ['(',')','*','|',end_mark]
+        operators = ['(',')','*','|',end_mark,DOT]
         i=0
         while regex[i]!=end_mark or stack[-1]!=end_mark:
             if regex[i]=='\\': # 转义字符，输出
@@ -564,9 +490,6 @@ class RegexNormalizer:
                 else:  # 长度为4
                     result += regex[i] + regex[i + 1] + regex[i + 2] + regex[i + 3]
                     i += 4
-            elif i<len(regex)-1 and regex[i:i+2] in ['<%','%>','<:',':>']: # 中括号和大括号的特殊表示
-                result += regex[i] + regex[i+1]
-                i += 2
             elif regex[i] not in operators: # 普通字符，输出
                 result += regex[i]
                 i += 1
