@@ -8,8 +8,9 @@ def main():
     print("Terminals:", yyl.terminal)
     print("Start Symbol:", yyl.start)
     print("Productions:")
-    for production in yyl.producer_list:
-        print(production)
+    print(yyl.producer_list[0])
+    # for production in yyl.producer_list:
+    #     print(production[0]+" "+production[1]+" ")
     
 
 main()

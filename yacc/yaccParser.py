@@ -57,6 +57,7 @@ class YaccParser:
             lines=ifile.readlines()
             i,k=0,0
             while i<len(lines):
+                j=1
                 if lines[i]=="\n":
                     print('blank line')
                     i+=1
@@ -69,7 +70,12 @@ class YaccParser:
                     print('blank line')
                     i+=1
                     continue
-                elif lines[i].startswith("%"):
+                elif lines[i].startswith("%%"):
+                    print('遇到%%')
+                    i+=1
+                    k+=1
+                    continue
+                elif lines[i].startswith("%token"):
                     print('阶段1')
                     self.define_rules(lines[i])
                     i+=1
