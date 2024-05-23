@@ -526,11 +526,58 @@ class RegexNormalizer:
             result.append(cur_item)
         return result
 
+
+
     @staticmethod
-    def infix_to_suffix(regex: str)->str:
+    def infix_to_postfix(regex: str)->str:
         """
         将中缀表达式转化为后缀表达式
         :param regex: 中缀正则表达式
         :return: 对应的后缀正则表达式
         """
-        # 思路：将每个连缀区域进行后缀表达即可
+        # 将每个连缀区域进行后缀表达即可，整个正则表达式的后缀形式就是这些连缀区域直接相连
+        end_mark = chr(129) # 用一个非法字符作为结束符
+        regex = regex + end_mark
+        stack = [end_mark]
+        result = ""
+        in_stack_pri = { # 栈内优先级
+            end_mark: 0,
+            "(": 1,
+            "|": 3,
+            "*": 5,
+            ")": 6,
+        }
+        in_coming_pri = { # 栈外优先级
+            end_mark: 0,
+            "(": 6,
+            "|": 2,
+            "*": 4,
+            ")": 1,
+        }
+        operators = ['(',')','*','|',end_mark]
+        i=0
+        while regex[i]!=end_mark or stack[-1]!=end_mark:
+            if regex[i]=='\\': # 转义字符，输出
+                if regex[i + 1] != 'x':  # 长度为2
+                    result += regex[i] + regex[i + 1]
+                    i += 2
+                else:  # 长度为4
+                    result += regex[i] + regex[i + 1] + regex[i + 2] + regex[i + 3]
+                    i += 4
+            elif i<len(regex)-1 and regex[i:i+2] in ['<%','%>','<:',':>']: # 中括号和大括号的特殊表示
+                result += regex[i] + regex[i+1]
+                i += 2
+            elif regex[i] not in operators: # 普通字符，输出
+                result += regex[i]
+                i += 1
+            else: # 操作符
+                if in_coming_pri[regex[i]]>in_stack_pri[stack[-1]]: # 栈外优先级高
+                    stack.append(regex[i])
+                    i += 1
+                elif in_coming_pri[regex[i]]<in_stack_pri[stack[-1]]: # 栈内优先级高
+                    result += stack.pop()
+                else: # 优先级相等
+                    item = stack.pop()
+                    if item=='(':
+                        i+=1
+        return result
