@@ -8,8 +8,7 @@ class YaccParser:
     def __init__(self,filename):
         self.terminal = []
         self.start = ""
-        self.Producer = Tuple[str, List[str]]
-        self.producer_list: List[YaccParser.Producer] = []
+        self.producer_list: List[Tuple[str, List[str]]] = []
         self.program2 = ""
         self.init_all(filename)
 
@@ -43,15 +42,6 @@ class YaccParser:
                 if right:
                     self.terminal.append(right)
                     right = ""
-            elif left == "start":
-                while i < len_ln:
-                    if ln[i] != " " and ln[i] != "\n":
-                        right += ln[i]
-                    else:
-                        if right:
-                            self.start=right
-                            right = ""
-                    break
 
             else:
                 raise Exception("Unrecognized directive: " + left)
@@ -89,6 +79,11 @@ class YaccParser:
                 elif lines[i].startswith("%token"):
 
                     self.define_rules(lines[i])
+                    i+=1
+                    continue
+                elif lines[i].startswith("%start"):
+                    start = lines[i][len("%start"):].strip()
+                    self.start=start
                     i+=1
                     continue
                 elif len(lines[i].split())==1:
