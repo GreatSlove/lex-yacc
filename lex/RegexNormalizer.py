@@ -36,6 +36,10 @@ for iteration in range(128):
         ascii_dict['\|'] = char
     elif char == '*':
         ascii_dict['\*'] = char
+    elif char == '[':
+        ascii_dict['\['] = char
+    elif char == ']':
+        ascii_dict['\]'] = char
     else:
         if 32 <= iteration <= 126:  # 可打印字符
             ascii_dict[char] = char
@@ -281,7 +285,8 @@ class RegexNormalizer:
                     result+=key+'|'
         else:
             for key in modified_chars:
-                result +=ascii_dict[key]+'|'
+                # result +=ascii_dict[key]+'|'
+                result += key + '|'
         return '('+result[:len(result)-1]+')'
 
 
@@ -356,7 +361,7 @@ class RegexNormalizer:
         :param content: 引号中的内容
         :return: 转换结果
         """
-        reserved = ['|', '*', '(', ')', '\\'] # 如果引号中包含这些保留字，需要加上\转义
+        reserved = ['|', '*', '(', ')', '\\', '[', ']'] # 如果引号中包含这些保留字，需要加上\转义
         result = ""
         i = 0
         while i<len(content):
@@ -483,6 +488,9 @@ class RegexNormalizer:
         operators = ['(',')','*','|',end_mark,DOT]
         i=0
         while regex[i]!=end_mark or stack[-1]!=end_mark:
+            # if regex[i]=='(':
+            #     print('( at i={}'.format(i))
+
             if regex[i]=='\\': # 转义字符，输出
                 if regex[i + 1] != 'x':  # 长度为2
                     result += regex[i] + regex[i + 1]
@@ -502,5 +510,6 @@ class RegexNormalizer:
                 else: # 优先级相等
                     item = stack.pop()
                     if item=='(':
+                        # print(') matched at i={}'.format(i))
                         i+=1
         return result
