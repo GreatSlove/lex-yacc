@@ -16,6 +16,12 @@ def main():
     for production in yyl.producer_list:
         print(production[0]+" "+production[1]+" ")
     
+    print(" ")
+
+    with open("./yacc/first_set.txt","r")as ifile:
+        for lines in ifile:
+            print(lines)
+    
 
 
 main()
