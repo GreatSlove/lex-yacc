@@ -17,6 +17,24 @@ class NFA(FiniteAutomata):
         :param state: 相应的状态
         :return: state的ε闭包
         """
+        if state not in self.states:
+            raise Exception("Cannot find state {} in this NFA.".format(state))
+        eps_closure = set()
+
+        # 用一个stack来记录闭包的元素变化情况。这里不能用另一个set，因为set在作为迭代变量时大小不允许改变
+        stack = [state]
+        while len(stack)>0:
+            # 将上一轮多出来的状态加入闭包
+            while len(stack)>0:
+                eps_closure.add(stack.pop())
+            # 对于闭包中的每个状态，将从它出发的所有空串边相连的状态加入闭包
+            for s in eps_closure:
+                for (to_state,character) in self.moves[s]:
+                    # 这里写not in逻辑不是因为重复添加进集合，而是如果不写这个逻辑，stack会永远非空
+                    # 想你了，std::unordered_set
+                    if character == EPSILON and to_state not in eps_closure:
+                        stack.append(to_state)
+        return eps_closure
 
 
 def gen_atom_nfa(char: str) -> NFA:
@@ -39,7 +57,8 @@ def gen_atom_nfa(char: str) -> NFA:
     moves[start_state].append((accept_state,char))
 
     alphabet = set()
-    alphabet.add(char)
+    if char != EPSILON: # 空串不加入字符集
+        alphabet.add(char)
     return NFA(states, moves, start_state, accept_states, alphabet)
 
 def concat_nfa(left:NFA,right:NFA)->NFA:
@@ -53,7 +72,7 @@ def concat_nfa(left:NFA,right:NFA)->NFA:
     start_state = left.startState
     states = left.states.union(right.states)
     alphabet = left.alphabet.union(right.alphabet)
-    alphabet.add(EPSILON)
+    # alphabet.add(EPSILON)
     # 合并两个转移边集，添加一条left终态到right初态的空串边
     moves = left.moves
     for key,value in right.moves.items():
@@ -84,7 +103,7 @@ def parallel_nfa(up:NFA,down:NFA)->NFA:
     accepting_states.add(accepting_state)
 
     alphabet = up.alphabet.union(down.alphabet)
-    alphabet.add(EPSILON)
+    # alphabet.add(EPSILON)
 
     states = up.states.union(down.states)
     states.add(start_state)
@@ -134,7 +153,7 @@ def kleene(nfa: NFA)->NFA:
     states.add(accepting_state)
 
     alphabet = nfa.alphabet
-    alphabet.add(EPSILON)
+    # alphabet.add(EPSILON)
     return NFA(states,moves,start_state,accepting_states,alphabet)
 
 def reg_to_nfa(regex: str, semantic_rule: str) -> NFA:
