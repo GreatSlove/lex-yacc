@@ -1,12 +1,14 @@
 from typing import List, Tuple
 
+# from yacc.main import Producer
+
+
 class YaccParser:
     
     def __init__(self,filename):
         self.terminal = []
         self.start = ""
-        self.Producer = Tuple[str, List[str]]
-        self.producer_list: List[self.Producer] = []
+        self.producer_list: List[Tuple[str, List[str]]] = []
         self.program2 = ""
         self.init_all(filename)
 
@@ -28,6 +30,7 @@ class YaccParser:
                 i += 1
 
             if left == "token":
+
                 while i < len_ln:
                     if ln[i] != " " and ln[i] != "\n":
                         right += ln[i]
@@ -38,8 +41,8 @@ class YaccParser:
                     i += 1
                 if right:
                     self.terminal.append(right)
-            elif left == "start":
-                start = ln[i:].strip()
+                    right = ""
+
             else:
                 raise Exception("Unrecognized directive: " + left)
 
@@ -47,9 +50,7 @@ class YaccParser:
         ln = ln.strip()
         rights =ln[1:]
         rights = rights.strip()
-        for right in rights.split(' '):
-            right = right.strip()
-            self.producer_list.append((current_production,right))
+        self.producer_list.append((current_production,rights))
 
     def init_all(self,filename):
         current_production = None
@@ -59,33 +60,36 @@ class YaccParser:
             while i<len(lines):
                 j=1
                 if lines[i]=="\n":
-                    print('blank line')
+
                     i+=1
                     continue
                 elif lines[i].strip()==";":
-                    print('遇到;')
+
                     i+=1
                     continue
                 elif lines[i].strip()=="":
-                    print('blank line')
+
                     i+=1
                     continue
                 elif lines[i].startswith("%%"):
-                    print('遇到%%')
+
                     i+=1
                     k+=1
                     continue
                 elif lines[i].startswith("%token"):
-                    print('阶段1')
+
                     self.define_rules(lines[i])
                     i+=1
                     continue
+                elif lines[i].startswith("%start"):
+                    start = lines[i][len("%start"):].strip()
+                    self.start=start
+                    i+=1
+                    continue
                 elif len(lines[i].split())==1:
-                    print('阶段2')
+
                     current_production=lines[i].strip()
                     while lines[j+i].strip()!=';':
-                        print('j='+str(j))
-                        print(current_production)
 
                         self.parse_production(lines[j+i],current_production)
                         j+=1
