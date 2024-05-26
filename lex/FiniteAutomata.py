@@ -16,7 +16,7 @@ class FiniteAutomata:
     """
     def __init__(self, states:set=None, moves=None, start_state:int=0, accepting_states:set=None, alphabet:set=None):
         self.states: set = states # 状态集
-        self.moves: [] = moves # 状态转移边(fromState, toState, char)
+        self.moves: {} = moves # 状态转移边fromState:[(toState1, char1),[toState2, char2],...]
         self.startState: int = start_state # 初态
         self.acceptingStates: set = accepting_states # 终态集
         self.alphabet: set = alphabet # 字母表

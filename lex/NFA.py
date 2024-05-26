@@ -1,6 +1,7 @@
 # NFA.py
 # Author: Furina-Focalors
 # Date: 2024.05.23
+from collections import defaultdict
 
 from .FiniteAutomata import *
 from .RegexNormalizer import EPSILON, DOT, ascii_dict
@@ -9,6 +10,13 @@ class NFA(FiniteAutomata):
     def __init__(self, states:set=None, moves=None, start_state:int=0, accepting_states:set=None, alphabet:set=None):
         super().__init__(states, moves, start_state, accepting_states, alphabet)
         self.acceptActionMap = {} # accepting_state:action
+
+    def get_eps_closure(self, state: int)->set:
+        """
+        获取状态state的ε闭包
+        :param state: 相应的状态
+        :return: state的ε闭包
+        """
 
 
 def gen_atom_nfa(char: str) -> NFA:
@@ -27,7 +35,8 @@ def gen_atom_nfa(char: str) -> NFA:
     states.add(start_state)
     states.add(accept_state)
 
-    moves = [(start_state,accept_state,char)]
+    moves = defaultdict(list) # 将所有不存在的键都初始化成[]，方便使用append
+    moves[start_state].append((accept_state,char))
 
     alphabet = set()
     alphabet.add(char)
@@ -45,11 +54,15 @@ def concat_nfa(left:NFA,right:NFA)->NFA:
     states = left.states.union(right.states)
     alphabet = left.alphabet.union(right.alphabet)
     alphabet.add(EPSILON)
-    moves:[] = left.moves + right.moves # 合并两个转移边集，添加一条left终态到right初态的空串边
+    # 合并两个转移边集，添加一条left终态到right初态的空串边
+    moves = left.moves
+    for key,value in right.moves.items():
+        for edge in value: # 将每一条边依次加入
+            moves[key].append(edge)
     # 在根据正则表达式生成NFA时，单个正则表达式只会有一个终态，因此它只会执行一次
     for state in left.acceptingStates:
         left_accepting = state
-        moves.append((left_accepting, right.startState, EPSILON))
+        moves[left_accepting].append((right.startState, EPSILON))
     # 连接方法中，用right的终态作为终态集
     accepting_states = right.acceptingStates
     return NFA(states,moves,start_state,accepting_states,alphabet)
@@ -77,14 +90,18 @@ def parallel_nfa(up:NFA,down:NFA)->NFA:
     states.add(start_state)
     states.add(accepting_state)
 
-    moves: [] = up.moves + down.moves
+    # 合并两个转移边集
+    moves = up.moves
+    for key, value in down.moves.items():
+        for edge in value:  # 将每一条边依次加入
+            moves[key].append(edge)
     # 添加四条空串边
-    moves.append((start_state, up.startState, EPSILON))
-    moves.append((start_state, down.startState, EPSILON))
+    moves[start_state].append((up.startState, EPSILON))
+    moves[start_state].append((down.startState, EPSILON))
     for state in up.acceptingStates:
-        moves.append((state, accepting_state, EPSILON))
+        moves[state].append((accepting_state, EPSILON))
     for state in down.acceptingStates:
-        moves.append((state, accepting_state, EPSILON))
+        moves[state].append((accepting_state, EPSILON))
 
     return NFA(states,moves,start_state,accepting_states,alphabet)
 
@@ -106,11 +123,11 @@ def kleene(nfa: NFA)->NFA:
 
     # 添加空串边
     moves = nfa.moves
-    moves.append((start_state, nfa.startState, EPSILON))
-    moves.append((start_state, accepting_state, EPSILON))
+    moves[start_state].append((nfa.startState, EPSILON))
+    moves[start_state].append((accepting_state, EPSILON))
     for state in nfa.acceptingStates:
-        moves.append((state, nfa.startState, EPSILON))
-        moves.append((state, accepting_state, EPSILON))
+        moves[state].append((nfa.startState, EPSILON))
+        moves[state].append((accepting_state, EPSILON))
 
     states = nfa.states
     states.add(start_state)
@@ -176,3 +193,34 @@ def merge_nfa(nfas:[])->NFA:
     :param nfas:
     :return:
     """
+    start_state = gen_new_state()
+    accepting = gen_new_state()
+    moves = defaultdict(list)
+
+    accepting_states = set()
+    accepting_states.add(accepting)
+
+    states = set()
+    states.add(start_state)
+    states.add(accepting)
+
+    alphabet = set()
+    accept_actions = {}
+
+    for nfa in nfas:
+        # 合并状态集、字母表和终态集，合并接收态语义动作集
+        states = states.union(nfa.states)
+        alphabet = alphabet.union(nfa.alphabet)
+        accepting_states = accepting_states.union(nfa.acceptingStates)
+        accept_actions.update(nfa.acceptActionMap)
+        # 合并动作集，这里只能用append方法，update会直接替换
+        for from_state,to_states in nfa.moves.items():
+            for to_state in to_states:
+                moves[from_state].append(to_state)
+        # 添加一条新初始状态到该NFA初始状态的空串边
+        moves[start_state].append((nfa.startState, EPSILON))
+        # 终态不用管，它们需要和语义动作一一对应
+
+    result = NFA(states,moves,start_state,accepting_states,alphabet)
+    result.acceptActionMap = accept_actions
+    return result
