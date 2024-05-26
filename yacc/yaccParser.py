@@ -8,7 +8,7 @@ class YaccParser:
     def __init__(self,filename):
         self.terminal = []
         self.start = ""
-        self.producer_list: List[Tuple[str, List[str]]] = []
+        self.producer_list: List[Tuple[int,str, List[str]]] = []
         self.program2 = ""
         self.init_all(filename)
 
@@ -46,38 +46,33 @@ class YaccParser:
             else:
                 raise Exception("Unrecognized directive: " + left)
 
-    def parse_production(self,ln, current_production):
+    def parse_production(self,n,ln, current_production):
         ln = ln.strip()
         rights =ln[1:]
         rights = rights.strip()
-        self.producer_list.append((current_production,rights))
+        self.producer_list.append((n,current_production,rights))
 
     def init_all(self,filename):
         current_production = None
         with open(filename, "r") as ifile:
             lines=ifile.readlines()
-            i,k=0,0
+            i,k,n=0,0,0
             while i<len(lines):
                 j=1
                 if lines[i]=="\n":
-
                     i+=1
                     continue
                 elif lines[i].strip()==";":
-
                     i+=1
                     continue
                 elif lines[i].strip()=="":
-
                     i+=1
                     continue
                 elif lines[i].startswith("%%"):
-
                     i+=1
                     k+=1
                     continue
                 elif lines[i].startswith("%token"):
-
                     self.define_rules(lines[i])
                     i+=1
                     continue
@@ -87,10 +82,9 @@ class YaccParser:
                     i+=1
                     continue
                 elif len(lines[i].split())==1:
-
                     current_production=lines[i].strip()
                     while lines[j+i].strip()!=';':
-
-                        self.parse_production(lines[j+i],current_production)
+                        self.parse_production(n,lines[j+i],current_production)
+                        n+=1
                         j+=1
                 i=i+j

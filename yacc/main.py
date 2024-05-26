@@ -14,13 +14,13 @@ def main():
         print (str(dic[0])+" "+dic[1]+" ")
     
     for production in yyl.producer_list:
-        print(production[0]+" "+production[1]+" ")
+        print(str(production[0])+" "+production[1]+" "+production[2])
     
     print(" ")
 
-    with open("./yacc/first_set.txt","r")as ifile:
-        for lines in ifile:
-            print(lines)
+    # with open("./yacc/first_set.txt","r")as ifile:
+    #     for lines in ifile:
+    #         print(lines)
     
 
 
