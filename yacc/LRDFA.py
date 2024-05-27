@@ -22,30 +22,26 @@ class LRState:
         for item in self.LRItemsSet:
             q.put(item)
         while not q.empty():
-            LRItem_tem=q.get()
-            if(LRItem_tem.Pposition>len(LRItem_tem.production[1])):
+            LRItem_tem = q.get()
+            if LRItem_tem.Pposition >= len(LRItem_tem.production[1]):
                 continue
-            sym=LRItem_tem.production[1][LRItem_tem.Pposition]
-            if(dic.string_to_num(sym)<0):
+            sym = LRItem_tem.production[1][LRItem_tem.Pposition]
+            if dic.string_to_num(sym) < 0:
                 continue
-            B=LRItem_tem.production[0]
-            if len(LRItem_tem.production[1])>LRItem_tem.Pposition+1:
-                print(LRItem_tem.Pposition)
-                print(len(LRItem_tem.production[1]))
-                predict_set=self.calculate_first(LRItem_tem.production[1][LRItem_tem.Pposition+1],dic,first)
+            B = LRItem_tem.production[0]
+            if LRItem_tem.Pposition + 1 < len(LRItem_tem.production[1]):
+                predict_set = self.calculate_first(LRItem_tem.production[1][LRItem_tem.Pposition + 1:], dic, first)
             else:
-                predict_set=LRItem_tem.lookahead
-            frontB=[]
+                predict_set = LRItem_tem.lookahead
+            frontB = []
             for Tup in yyl.producer_list:
-                if B==Tup[0]:
-                    frontB.append((B,Tup[1]))
-                    for lin in frontB:
-                        print(lin[0]+lin[1])
+                if B == Tup[0]:
+                    frontB.append((B, Tup[1]))
             for p in frontB:
-                    new_LRItem = LRItem(production=p, lookahead=predict_set)
-                    if new_LRItem not in self.LRItemsSet:
-                        self.LRItemsSet.add(new_LRItem)
-                        q.put(new_LRItem)
+                new_LRItem = LRItem(production=p, lookahead=predict_set)
+                if new_LRItem not in self.LRItemsSet:
+                    self.LRItemsSet.add(new_LRItem)
+                    q.put(new_LRItem)
 
                 
         

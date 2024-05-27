@@ -3,10 +3,7 @@ from typing import Tuple , List
 
 class Dic:
     def __init__(self,mapping_file):
-        #self.array=np.zeros(10,250)
-        #self.Yfile=Yfile
         self.mapping_file=mapping_file
-        #self.dictionary:Tuple[int,str] = (0, "")
         self.dictionaries: List[Tuple[int, str]] = []
         self.read_from_map(self.mapping_file)
 
@@ -14,7 +11,6 @@ class Dic:
         with open(mapping_file,"r")as ifile:
             for lines in ifile:
                 num,word=lines.strip().split(maxsplit=1)
-                #print(f"将({num}:{word})放入字典中")
                 self.dictionaries.append((int(num),word))#读取映射文件，将其加入字典中
 
     def string_to_num(self,a:str)->int:
