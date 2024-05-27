@@ -1,9 +1,9 @@
-from typing import List, Tuple
+from typing import List, Tuple,Set
 
 class first_set:
     def __init__(self,filename):
         self.filename=filename
-        self.firstSet:List[Tuple[str,set[str]]]=[]
+        self.firstSet:List[Tuple[str,Set[str]]]=[]
         self.read_from_file()
     
     def read_from_file(self):

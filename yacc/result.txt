@@ -1,4 +1,5 @@
-1 translation_unit 
+0 start
+1 translation_unit
 2 designator_list
 3 iteration_statement
 4 assignment_expression
