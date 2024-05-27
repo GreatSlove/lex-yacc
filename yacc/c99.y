@@ -14,6 +14,11 @@
 %start translation_unit
 %%
 
+start
+	: translation_unit
+	;
+
+
 primary_expression
 	: IDENTIFIER
 	| CONSTANT
