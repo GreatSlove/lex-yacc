@@ -11,55 +11,12 @@ class Item:
         self.lookahead=lookahead#向前搜索符
 
 
-class LRState:
+class ItemSet:
     def __init__(self,stateNumb:int,itemSet:List[Item]):
         self.stateNumb=stateNumb#状态号
         self.edgesMap={}#map[int,int]#通过边到达另一个状态
         self.itemSet=itemSet#状态里的产生式项目
 
-    # def state_internal_extension(self, yyl: YaccParser, dic: Dic, first: first_set):
-    #     q = queue.Queue()
-    #     for item in self.LRItemsSet:
-    #         q.put(item)
-    #     while not q.empty():
-    #         LRItem_tem=q.get()
-    #         if(LRItem_tem.Pposition>len(LRItem_tem.production[1])):
-    #             continue
-    #         sym=LRItem_tem.production[1][LRItem_tem.Pposition]
-    #         if(dic.string_to_num(sym)<0):
-    #             continue
-    #         B=LRItem_tem.production[0]
-    #         if len(LRItem_tem.production[1])>LRItem_tem.Pposition+1:
-    #             print(LRItem_tem.Pposition)
-    #             print(len(LRItem_tem.production[1]))
-    #             predict_set=self.calculate_first(LRItem_tem.production[1][LRItem_tem.Pposition+1],dic,first)
-    #         else:
-    #             predict_set=LRItem_tem.lookahead
-    #         frontB=[]
-    #         for Tup in yyl.producer_list:
-    #             if B==Tup[0]:
-    #                 frontB.append((B,Tup[1]))
-    #                 for lin in frontB:
-    #                     print(lin[0]+lin[1])
-    #         for p in frontB:
-    #                 new_LRItem = LRItem(production=p, lookahead=predict_set)
-    #                 if new_LRItem not in self.LRItemsSet:
-    #                     self.LRItemsSet.add(new_LRItem)
-    #                     q.put(new_LRItem)
-        
-
-    # def calculate_lookaheads(self, item: LRItem, beta: List[str], first: first_set) -> Set[int]:
-    #     lookaheads = set()
-    #     if item.Pposition + 1 < len(item.production[1]):
-    #         beta = item.production[1][item.Pposition + 1:] + beta
-    #         first_beta = self.calculate_first(beta, first)
-    #         if '' in first_beta:  # ε in FIRST(beta)
-    #             first_beta.remove('')
-    #             first_beta.add(item.lookahead)
-    #         lookaheads.update(first_beta)
-    #     else:
-    #         lookaheads.add(item.lookahead)
-    #     return lookaheads
 
     def calculate_first(self, symbols: str,dic: Dic, first: first_set) -> Set[int]:
         first_result = set()
@@ -80,7 +37,7 @@ class DFA:
 
 
     def print_LRItems(self):
-        for state in self.LRStateSet:
+        for state in self.Collection:
             print(f"State Number: {state.stateNumb}")
             print("LR Items:")
             for item in state.LRItemsSet:
@@ -88,8 +45,28 @@ class DFA:
                 print(f"Production: {item.production}")
                 print(f"Lookahead: {item.lookahead}")
                 print()
-    #def state_internal_extension(self,LRState:LRState):
+    
+    def CFGToLRDFA(self):
+        q=queue.Queue()
+        newItem:Item
+        newItemSet:ItemSet
+        newItem.productionInt=0#S'->S
+        newItem.lookahead.add(-88)#文法结束符号
+        newItemSet.stateNumb=0
+        newItemSet.itemSet.append(newItem)#仅保留内核项
+        self.Collection.append(newItemSet)
+        q.put(0)
+
+        while not len(q)==0:
+            x=q.queue[0]
+            q.get()
+            wholeSet:ItemSet
+            epsilon_clousure(self.Collection[x],wholeSet)
+
+
+
+    #def epsilon_clousure(self,LRStateSet:ItemSet,wholeLRStateSet:ItemSet):
         
+
 myLRDFA=DFA()
-myLRDFA.init_state_0()
 myLRDFA.print_LRItems()
