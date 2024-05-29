@@ -65,7 +65,8 @@ class DFA:
 
 
 
-    def epsilon_clousure(self,LRStateSet:ItemSet,wholeLRStateSet:ItemSet):
+    #def epsilon_clousure(self,LRStateSet:ItemSet,wholeLRStateSet:ItemSet):
+        
 
 myLRDFA=DFA()
 myLRDFA.print_LRItems()
