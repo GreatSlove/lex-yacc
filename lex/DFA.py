@@ -3,9 +3,9 @@
 # Date: 2024.05.26
 from collections import defaultdict
 
-from lex import NFA
-from lex.FiniteAutomata import FiniteAutomata
-from lex.NFA import gen_new_state
+from NFA import NFA
+from FiniteAutomata import FiniteAutomata
+from NFA import gen_new_state
 
 
 class DFA(FiniteAutomata):

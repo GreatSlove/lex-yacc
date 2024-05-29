@@ -3,8 +3,8 @@
 # Date: 2024.05.23
 from collections import defaultdict
 
-from .FiniteAutomata import *
-from .RegexNormalizer import EPSILON, DOT, ascii_dict
+from FiniteAutomata import *
+from RegexNormalizer import EPSILON, DOT, ascii_dict
 
 class NFA(FiniteAutomata):
     def __init__(self, states:set=None, moves=None, start_state:int=0, accepting_states:set=None, alphabet:set=None):
