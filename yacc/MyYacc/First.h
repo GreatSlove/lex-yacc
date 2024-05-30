@@ -9,7 +9,7 @@ extern map<int, pair<int, int> >indexMap;
 
 void intersection(set<int>&, const set<int>&);
 void first_symbol(set<int>&, int&, set<int>&);
-void first_string(set<int>&, const vector<int>&);
+void first_string(set<int>&, const vector<int>&); 
 
 //若有epsilon 表示为-1
 
