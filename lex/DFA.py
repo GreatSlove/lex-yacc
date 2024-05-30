@@ -254,12 +254,14 @@ def nfa_to_dfa(nfa: NFA)->DFA:
     new_accept_action_map = {}
 
     # 检查新的初始状态是否同时也是终态
+    tmp_accepting = set() # 需要选择.l文件中靠前的语义动作，即编号最小的状态对应的语义动作
     for state in start_closure:
         if state in nfa.acceptingStates:
+            tmp_accepting.add(state)
             new_accepting_states.add(new_start_state)
-            # 规定它的语义动作。如果这个集合中包含了多个终态，取.l文件中靠上的语义，因此执行完之后需要break
-            new_accept_action_map[new_start_state] = nfa.acceptActionMap[state]
-            break
+    if len(tmp_accepting)>0:
+        # 规定它的语义动作。如果这个集合中包含了多个终态，取.l文件中靠上的语义
+        new_accept_action_map[new_start_state] = nfa.acceptActionMap[min(tmp_accepting)]
 
     for cur_state in to_process: # 对于每个待处理的状态集（通过求闭包得到）对应的新状态
         closure = states_map[cur_state] # 对应的状态集
@@ -299,12 +301,14 @@ def nfa_to_dfa(nfa: NFA)->DFA:
                 new_states.add(new_state)
                 # 当前闭包对应的新状态，读入character，到现在生成的这个新状态
                 new_moves[cur_state].append((new_state, character))
-                # 检查其中是否有终态，原理同新初态检查
+                # 检查其中是否有终态，并指定语义动作
+                tmp_accepting = set()
                 for s in result:
                     if s in nfa.acceptingStates:
+                        tmp_accepting.add(s)
                         new_accepting_states.add(new_state)
-                        new_accept_action_map[new_state] = nfa.acceptActionMap[s]
-                        break
+                if len(tmp_accepting)>0:
+                    new_accept_action_map[new_state] = nfa.acceptActionMap[min(tmp_accepting)]
             else: # 如果是已有的状态，也要添加相应的move
                 new_moves[cur_state].append((result_state,character))
 
