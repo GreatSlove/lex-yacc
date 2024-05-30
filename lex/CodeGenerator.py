@@ -104,48 +104,53 @@ def generate_yylex(dfa:DFA)->str:
 int yylex(){
     // Set the default streams to stdin and stdout
     if(!yyin) yyin = stdin;
-    if(!yyout) yyout = stdout;    
+    if(!yyout) yyout = stdout;
 
     // read chars from yyin until there is no moves available.
-    while(yy_cur_state != -1){
+    while(1){
         yy_cur_char = fgetc(yyin);
-        ++yy_cur_ptr;
-        ++yy_rb_chars;
+        if(yy_cur_char==EOF)break;
+
+		++yy_rb_chars;
+		++yy_cur_ptr;
+		yy_cur_buf[yy_cur_buf_ptr++] = yy_cur_char;
+
+		if(yy_cur_char=='\\n'){
+            ++yylineno;
+            ++yy_rb_lines;
+        }
+
         // Transfer to another state.
         yy_cur_state = yy_trans_mat[yy_cur_state][yy_cur_char];
+		if(yy_cur_state==-1)break;
         // Record the last accepting state to implement the longest match.
-        if(yy_is_accepting[yy_cur_char]){
+        if(yy_is_accepting[yy_cur_state]){
             yy_last_acc_ptr = yy_cur_ptr;
             yy_last_accepting_state = yy_cur_state;
             yy_rb_lines = 0;
-            yy_rb_chars = 0;
-        }
-        
-        yytext[yytext_ptr++] = yy_cur_char;
-        
-        if(yy_cur_char=='\\n'){
-            ++yylineno;
-            ++yy_rb_lines;
+			yy_rb_chars = 0;
         }
     }
 
     // Rollback moves after the last accepting state. The yylex() should start at the first char 
     // after yy_last_accepting_state.
     if(yy_last_accepting_state == -1) return -1;
-    fseek(yyin, yy_last_acc_ptr-yy_cur_ptr+1, SEEK_CUR);
+    fseek(yyin, yy_last_acc_ptr-yy_cur_ptr, SEEK_CUR);
     yylineno -= yy_rb_lines;
-    yy_cur_state = 0;
-    int i;
-    for(i=0;i<yy_rb_chars;++i){
-        yytext[yy_cur_ptr-1-i] = '\\0';
-    }
+    yy_cur_state = START_STATE;
     yy_cur_ptr = yy_last_acc_ptr;
+	// copy cur_buf to yytext
+	memset(yytext, 0, yy_buf_size);
+	yyleng = strlen(yy_cur_buf);
+    strcpy(yytext, yy_cur_buf);
+    memset(yy_cur_buf, 0, yy_buf_size);
+    yy_cur_buf_ptr = 0;
     // Get the current accepting state and do the switch() work. Then reset yy_last_accepting_state and yy_last_acc_ptr.
     int cur_accepting_state = yy_last_accepting_state;
     yy_last_accepting_state = -1;
     yy_last_acc_ptr = -1;
 
-    // Do the switch() work to find the corresponding accept action."""
+    // Do the switch() work to find the corresponding accept_action."""
     code += generate_switch(dfa)
     return code
 
@@ -190,21 +195,19 @@ def generate_code(dfa:DFA, header:str, footer:str):
 #include <stdio.h>
 #include <stdlib.h>
 
-FILE* yyin, yyout;
-#ifdef YY_STDINIT
-    yyin = stdin;
-    yyout = stdout;
-#else
-    yyin = NULL;
-    yyout = NULL;
-#endif
+FILE* yyin = NULL, *yyout = NULL;
 
-char yytext[1024] = {0};
-int yytext_ptr = 0;
+#define START_STATE {}
+
+'''.format(dfa.startState)
+
+    code += '''const int yy_buf_size = 2048;
+char yytext[2048] = {0};
+char yy_cur_buf[2048] = {0};
 int yylineno = 1, yyleng = 0;
-int yy_cur_char = 0, yy_cur_ptr = 0, yy_cur_state = 0;
+int yy_cur_char = 0, yy_cur_ptr = 0, yy_cur_buf_ptr = 0, yy_cur_state = START_STATE;
 int yy_last_accepting_state = -1, yy_last_acc_ptr = -1, yy_rb_lines = 0, yy_rb_chars = 0;
-#define ECHO fprintf(yyout,"%s\\n",yytext);
+# define ECHO 0
 
 '''
     code += header
