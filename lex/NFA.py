@@ -37,6 +37,33 @@ class NFA(FiniteAutomata):
         return eps_closure
 
 
+    def match(self, input_string):
+        """
+        用当前NFA匹配输入字符串
+        :param input_string:
+        :return:
+        """
+        current_states = self.get_eps_closure(self.startState)
+        for char in input_string:
+            next_states = set()
+            for state in current_states:
+                if state in self.moves:
+                    for (next_state, transition_char) in self.moves[state]:
+                        if transition_char == char:
+                            next_states.update(self.get_eps_closure(next_state))
+            current_states = next_states
+
+        # 匹配state编号最小的终态
+        cur_acc_states = set()
+        for state in current_states:
+            if state in self.acceptingStates:
+                cur_acc_states.add(state)
+        if len(cur_acc_states)>0:
+            return self.acceptActionMap[min(cur_acc_states)]
+        else:
+            return None
+
+
 def gen_atom_nfa(char: str) -> NFA:
     """
     生成原子NFA，形如s1--char-->[s2]

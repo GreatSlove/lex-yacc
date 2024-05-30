@@ -27,3 +27,4 @@ class FiniteAutomata:
         print('startState: ', self.startState)
         print('acceptingStates: ', self.acceptingStates)
         print('alphabet: ', self.alphabet)
+

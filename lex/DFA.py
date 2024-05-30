@@ -38,7 +38,7 @@ class DFA(FiniteAutomata):
             file.write(b'SEPARATE')
             for from_state, moves_list in self.moves.items():
                 for to_state, character in moves_list:
-                    content = '{}AND{}AND{}NEXT'.format(from_state, to_state, character)
+                    content = '{}FURINA{}FURINA{}NEXT'.format(from_state, to_state, character)
                     file.write(content.encode('utf-8'))
             # 初态
             content = 'SEPARATE{}SEPARATE'.format(self.startState)
@@ -55,7 +55,7 @@ class DFA(FiniteAutomata):
             # 语义动作
             file.write(b'SEPARATE')
             for state, action in self.acceptActionMap.items():
-                content = '{}AND{}NEXT'.format(state, action)
+                content = '{}FURINA{}NEXT'.format(state, action)
                 file.write(content.encode('utf-8'))
 
     def read_from_file(self, filename):
@@ -88,7 +88,7 @@ class DFA(FiniteAutomata):
             moves = moves[:len(moves) - 1]
             result_moves = defaultdict(list)
             for item in moves:
-                items = item.split('AND')
+                items = item.split('FURINA')
                 result_moves[int(items[0])].append((int(items[1]), items[2]))
             # 初态
             result_start_state = int(start_state)
@@ -109,7 +109,7 @@ class DFA(FiniteAutomata):
             accept_action_map = accept_action_map[:len(accept_action_map) - 1]
             result_accept_action_map = {}
             for item in accept_action_map:
-                items = item.split('AND')
+                items = item.split('FURINA')
                 result_accept_action_map[int(items[0])] = items[1]
 
         self.states = result_states
@@ -118,6 +118,29 @@ class DFA(FiniteAutomata):
         self.acceptingStates = result_accepting_state
         self.alphabet = result_alphabet
         self.acceptActionMap = result_accept_action_map
+    def match(self, string:str):
+        """
+        匹配给定的字符串
+        :param string:
+        :return:
+        """
+        cur_state = self.startState
+        for i in range(len(string)):
+            has_trans = False
+            for next_state, rcv_char in self.moves[cur_state]:
+                if rcv_char == string[i]:
+                    cur_state = next_state
+                    has_trans = True
+                    break
+            if not has_trans:
+                if i!=range(len(string)-1): # 要求完整匹配
+                    return None
+                else:
+                    break
+        if cur_state not in self.acceptingStates:
+            return None
+        else:
+            return self.acceptActionMap[cur_state]
 
     def minimize(self):
         """

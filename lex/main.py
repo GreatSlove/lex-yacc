@@ -7,7 +7,7 @@ from YyLexReader import *
 from RegexNormalizer import *
 from DFA import *
 
-DFA_file = './dfa.bin'
+DFA_file = None
 
 print('Reading lex file...')
 
@@ -74,7 +74,7 @@ print('Generating DFA...')
 
 if DFA_file:
     dfa = DFA()
-    dfa.read_from_file('dfa.bin')
+    dfa.read_from_file(DFA_file)
 else:
     dfa = nfa_to_dfa(final_nfa)
     dfa.write_to_file('dfa.bin')
@@ -86,7 +86,7 @@ print('-------------------')
 print("Minimizing...")
 
 dfa.minimize()
-# dfa.write_to_file('minimized.bin')
+dfa.write_to_file('minimized.bin')
 
 print("Done.")
 print('-------------------')
