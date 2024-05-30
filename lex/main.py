@@ -7,7 +7,7 @@ from YyLexReader import *
 from RegexNormalizer import *
 from DFA import *
 
-DFA_file = None
+DFA_file = 'dfa.bin'
 
 print('Reading lex file...')
 

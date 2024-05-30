@@ -142,6 +142,7 @@ class DFA(FiniteAutomata):
         else:
             return self.acceptActionMap[cur_state]
 
+
     def minimize(self):
         """
         最小化DFA
@@ -155,12 +156,38 @@ class DFA(FiniteAutomata):
         partition = []
         # 建立状态到分组的索引
         state_group = {}
-        for state in terminals:
-            state_group[state] = terminals
         for state in non_terminals:
             state_group[state] = non_terminals
         # 下一轮迭代的数组
-        next_turn = [terminals, non_terminals]
+        next_turn = []
+
+        # 将没有任何moves的终态直接进行划分。非终态不可能没有moves
+        term_has_moves = []
+        for state in terminals:
+            if len(self.moves[state])==0:
+                # 将有相同语义动作的状态分为一组
+                append_new = True
+                for group in next_turn:
+                    if self.acceptActionMap[state] == self.acceptActionMap[group[0]]:
+                        group.append(state)
+                        append_new = False
+                        break
+                # 没有相同，新建一组
+                if append_new:
+                    next_turn.append([state])
+            else:
+                term_has_moves.append(state)
+
+        next_turn.append(term_has_moves)
+        # 为没有moves的终态建立索引
+        for group in next_turn:
+            for state in group:
+                state_group[state] = group
+        # 为有moves的终态建立索引
+        for state in term_has_moves:
+            state_group[state] = term_has_moves
+        # 将非终态加入待处理划分
+        next_turn.append(non_terminals)
 
         # 生成一个新的moves字典，它的结构为from_state:[(to_group,character),...]
         modified_moves = defaultdict(list)
@@ -168,38 +195,60 @@ class DFA(FiniteAutomata):
         while len(partition) != len(next_turn): # 不断尝试划分，直到不再有新的分组出现
             partition = next_turn
             next_turn = []
-            # print('------TURN------')
-            # print('current partition:',partition)
+
+            # 按照上一轮划分完成的结果更新moves表
             modified_moves = defaultdict(list)
             for group in partition:
-                # print('------GROUP------')
-                # print('current group:',group)
+                # 将没有moves的状态直接放到next_turn中
+                if len(self.moves[group[0]]) == 0:
+                    next_turn.append(group)
+                    continue
+
                 for state in group:
                     moves_list = self.moves[state]
                     for to_state,character in moves_list:
                         modified_moves[state].append((state_group[to_state],character))
-                # print('modified moves = ',modified_moves)
-                # 将转移到不同group的状态分开
-                if not modified_moves: # 如果一开始某个集合中所有状态都没有出发边，下面的逻辑不会执行，而这个组不需要再进行划分
-                    next_turn.append(group)
-                    continue
-                # 由于把moves中所有的to_state换成了对应的group，因此两个状态在同一个group，当且仅当其moves相等
-                for from_state in list(modified_moves.keys()):
-                    is_in_group = False
-                    for g in next_turn:
-                        # 如果一个状态和某个已有的组g的moves相同，说明它们是同组
-                        if modified_moves[from_state] == modified_moves[g[0]]:
-                            if from_state not in g: # list要保证不重复
-                                g.append(from_state)
-                            is_in_group = True
-                            break
-                    if not is_in_group: # 如果没有和它moves相同的组，说明它属于一个新的组，增加一组
-                        next_turn.append([from_state])
-                # 按next_turn更新state_group索引关系
+
+            # 将转移到不同group的状态分开
+            # 由于把moves中所有的to_state换成了对应的group，因此判断两个状态在同一个group，可以检查moves是否相等
+            # 但是，如果是终态，除了要检查moves是否相同，还要检查action是否相同，action不同的状态不能当作同一组对待
+            for from_state in list(modified_moves.keys()):
+                is_in_group = False
                 for g in next_turn:
+                    # 如果一个是终态一个不是终态，不能合并，跳过
+                    if (
+                        from_state in self.acceptingStates and g[0] not in self.acceptingStates
+                        or from_state not in self.acceptingStates and g[0] in self.acceptingStates
+                    ):
+                        continue
+                    # 判断from_state和已有组g中的所有状态moves是否相同
+                    has_same_moves = True
                     for s in g:
-                        state_group[s] = g
-                # print('next turn is:',next_turn)
+                        if modified_moves[from_state] != modified_moves[s]:
+                            has_same_moves = False
+                            break
+                    if has_same_moves:
+                        # 如果是终态，额外判断action是否相同
+                        if from_state in self.acceptingStates:
+                            can_merge = True
+                            for s in g:
+                                if self.acceptActionMap[s] != self.acceptActionMap[from_state]:
+                                    # 如果它和组内任何一个状态的语义动作不同，则不能放进这个组
+                                    can_merge = False
+                                    break
+                            if not can_merge: # 不能合，检查下一组是否满足条件
+                                continue
+                        if from_state not in g: # list要保证不重复
+                            g.append(from_state)
+                        is_in_group = True
+                        break
+                if not is_in_group: # 如果没有和它moves相同的组，说明它属于一个新的组，增加一组
+                    next_turn.append([from_state])
+            # 按next_turn更新state_group索引关系
+            for g in next_turn:
+                for s in g:
+                    state_group[s] = g
+
         # 划分完成后，partition即包含每个分组及其中的状态；modified_moves包含了每个状态对应的moves
         # 选择代表状态，构造DFA的五元组和语义动作
         new_start_state = -1
@@ -215,8 +264,8 @@ class DFA(FiniteAutomata):
             # 由于初始划分将终态和非终态分开，因此判断任何一个元素是否属于终态集即可
             if group[0] in self.acceptingStates:
                 new_accepting_states.add(group[0])
-                # 选择编号最小的状态对应的语义动作，它是在.l文件中比较靠前的一项，在构造NFA时已经确定
-                new_accept_action_map[group[0]] = self.acceptActionMap[min(group)]
+                # 不需要选择最小，因为划分时已经保证了每一项语义动作都相同
+                new_accept_action_map[group[0]] = self.acceptActionMap[group[0]]
             # 构造moves
             for to_group,character in modified_moves[group[0]]:
                 temp_new_moves[group[0]].add((to_group[0],character))
