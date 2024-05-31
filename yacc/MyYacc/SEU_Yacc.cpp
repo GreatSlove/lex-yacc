@@ -1,11 +1,9 @@
 #include <iostream>
 #include "helper.h"
-//#include "LR1ToLALR.h"
+#include "LR1ToLALR.h"
 #include "First.h"
 #include "CFGToLRDFA.h"
 #include "Parse_Yacc.h"
-//#include "Parsing.h"
-//#include "CodeGeneration.h"
 extern map<int, set<int> > firstMap;
 
 
@@ -50,8 +48,25 @@ int main() {
     CFGToLRDFA(LR1);
     cout<<"\n------------Construct LR(1) DFA.........done\n";
 
+    //printCollection(LR1);
+    Parse_Table p1;
+    LR1ToTable(LR1,p1);
+    cout << "\n------------Construct LR(1) Parsing Table........done\n";
+    Print_ParsingTable2(p1,"LRParsingTable.csv");
 
-    printCollection(LR1);
+    Collection LALRCollectionTestcase;
+    LR1ToLALR(LR1, LALRCollectionTestcase);
+    cout << "\n------------Construct LALR DFA.........done\n";
+    
+
+    Parse_Table p2;
+    LR1ToTable(LALRCollectionTestcase, p2);
+    cout << "\n------------Construct LALR Parsing Table........done\n";
+
+    Print_ParsingTable2(p2,"LALRParsingTable.csv");
+
+
+  
 	system("pause");
     return 0;
 }
