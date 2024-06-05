@@ -2,7 +2,7 @@
 #ifndef SEUYACC_LR1TOLALR_H
 #define SEUYACC_LR1TOLALR_H
 
-#include "helper.h"
+#include "define.h"
 #include <map>
 #include <iostream>
 #include <fstream>
@@ -213,8 +213,6 @@ void Print_ParsingTable2(Parse_Table& Parsing_table,string filename){
                     output<<" "<<',';
                 }
             }
-
-
             if(Parsing_table[i][j]<=0)
             {
                 if(Parsing_table[i][j]!=-INT_MAX)
@@ -251,9 +249,4 @@ void Print_ParsingTable2(Parse_Table& Parsing_table,string filename){
     }
 
 }
-
-
-
-
-
-#endif //SEUYACC_LR1TOLALR_H
+#endif

@@ -1,9 +1,9 @@
 #include <iostream>
-#include "helper.h"
+#include "define.h"
 #include "LR1ToLALR.h"
 #include "First.h"
-#include "CFGToLRDFA.h"
-#include "Parse_Yacc.h"
+#include "LR1.h"
+#include "parse.h"
 extern map<int, set<int> > firstMap;
 
 
@@ -34,39 +34,37 @@ void PrintGlobalProductionVec() {
 using namespace std;
 int main() {
 
-    string filepath = "./yacc.y";
+    string filepath = "./c99.y";
     Parse_Yacc(filepath,GlobalSymbolVec,GlobalProductionVec,GlobalProducerVec,FuncVec);
 
 
     PrintGlobalProductionVec();
-    cout<<"\n------------Parse yacc.y.........done\n";
+    cout<<"\n..Parse yacc.y..\n";
 
     Collection LR1;
     calc_first();
-    cout<<"\n------------calculate First set.........done\n";
+    cout<<"\n..calculate First set..done\n";
 
     CFGToLRDFA(LR1);
-    cout<<"\n------------Construct LR(1) DFA.........done\n";
+    cout<<"\n..Construct LR(1) DFA..done\n";
 
     //printCollection(LR1);
     Parse_Table p1;
     LR1ToTable(LR1,p1);
-    cout << "\n------------Construct LR(1) Parsing Table........done\n";
+    cout << "\n..Construct LR(1) Parsing Table..done\n";
     Print_ParsingTable2(p1,"LRParsingTable.csv");
 
     Collection LALRCollectionTestcase;
     LR1ToLALR(LR1, LALRCollectionTestcase);
-    cout << "\n------------Construct LALR DFA.........done\n";
+    cout << "\n..Construct LALR DFA..done\n";
     
 
     Parse_Table p2;
     LR1ToTable(LALRCollectionTestcase, p2);
-    cout << "\n------------Construct LALR Parsing Table........done\n";
+    cout << "\n..Construct LALR Parsing Table..done\n";
 
     Print_ParsingTable2(p2,"LALRParsingTable.csv");
 
-
-  
 	system("pause");
     return 0;
 }

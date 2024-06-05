@@ -8,13 +8,13 @@
 #include <map>
 #include <vector>
 #include <queue>
+#include <iostream>
 using namespace std;
 
-//定义LR1中的项目
 typedef struct Item {
-    int dot_positionInt = 0;      //表示·的位置
-    int productionrInt = -1;      //表示表达式文法标号
-    set<int> prediction;         //表示预测符标号的set
+    int dot_positionInt = 0;      //点的位置
+    int productionrInt = -1;      //表达式文法标号
+    set<int> prediction;         //lookahead
     inline bool operator==(const Item& item)const {
         if (dot_positionInt != item.dot_positionInt ||
             productionrInt != item.productionrInt ||
@@ -32,23 +32,7 @@ typedef struct Item {
         prediction.insert(item.prediction.cbegin(), item.prediction.cend());
         return *this;
     }
-
-    bool operator<(const Item& rhs) const
-    {
-        if (productionrInt < rhs.productionrInt) {
-            return true;
-        }  //assume that you compare the record based on a
-        else {
-            if (productionrInt == rhs.productionrInt) {
-                if (dot_positionInt < rhs.dot_positionInt) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    Item() {
-    }
+    Item(){}
     Item(int a, int b, set<int>c) {
         dot_positionInt = a;
         productionrInt = b;
@@ -58,7 +42,7 @@ typedef struct Item {
 }Item;
 
 
-//定义LR1中的项目集
+//LR1项目
 typedef struct ItemSet {
     int stateInt = -1;                    //状态号
     unordered_map<int, int> edgeMap;     //<字符标号，状态号>
@@ -78,41 +62,34 @@ typedef struct ItemSet {
     }
 }ItemSet;
 
-
-
-//定义LR1中的项目集族
+//LR1项目集
 typedef vector<ItemSet> Collection;
 
-//存放字符
 typedef struct Symbol {
-    string symbol;          //字符内容
-    bool isTerminal;        //是否是终结符号
+    string symbol;        
+    bool isTerminal;      
 }Symbol;
 
 //存放Symbol的全局变量
 typedef vector<Symbol> SymbolVec;
 SymbolVec GlobalSymbolVec;
 
-//存放产生式，<左，右>=<string,vector<string> >
+//产生式
 typedef vector<pair<string, vector<string> > > ProductionVec;
 ProductionVec GlobalProductionVec;
 
-//存放产生式，<左，右>=<int,vector<int> > 数字版本
+//存放产生式的数字版本
 typedef vector<pair<int, vector<int> > > ProducerVec;
 ProducerVec GlobalProducerVec;
 
 //分析表
 typedef unordered_map<int, unordered_map < int, int > >  Parse_Table;
-//vector 下表表示状态号，<int,int> <Token在Tokenvec标号，规约/转移结果>
-//正数表示 shift  负数表示reduce   accept INT_MAX
-
 
 //对yacc.y文件进行解析,得到产生式vec/辅助函数/Symbol
 vector<string> FuncVec;
 //存放辅助函数
 map<int, pair<int, int> >indexMap;
-//记录一个非终结符所对应的产生式的序号区间
-//pair 中first是开始下标 second是该非终结符有多少个产生式
+
 map<int, set<int> > firstMap;
 //存放first集合
 int startProduction;
@@ -158,4 +135,4 @@ void printCollection(const Collection& collection) {
     }
 }
 
-#endif //SEUYACC_HELPER_H
+#endif
